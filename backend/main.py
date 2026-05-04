@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATA_PATH = "/Users/danielemalerba/Downloads/fintech_clean_v2.tsv"
+DATA_PATH = "data/fintech_clean_v2.tsv"
 df = pd.read_csv(DATA_PATH, sep="\t")
 
 VALID_BANKS = [
