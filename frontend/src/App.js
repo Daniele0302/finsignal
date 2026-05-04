@@ -20,6 +20,8 @@ function App() {
   const [bankOverview, setBankOverview] = useState(null);
   const [topIssues, setTopIssues] = useState([]);
   const [wordCloud, setWordCloud] = useState([]);
+  const [strategy, setStrategy] = useState(null);
+  const [strategyLoading, setStrategyLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/benchmark`)
@@ -39,6 +41,7 @@ function App() {
       setBankOverview(null);
       setTopIssues([]);
       setWordCloud([]);
+      setStrategy(null);
       return;
     }
 
@@ -53,6 +56,27 @@ function App() {
     fetch(`${API_BASE}/wordcloud/${encodeURIComponent(bankName)}`)
       .then((res) => res.json())
       .then((data) => setWordCloud(data.words || []));
+
+    setStrategy(null);
+  }
+
+  function generateStrategy() {
+    if (!selectedBank) return;
+    setStrategyLoading(true);
+    fetch(`${API_BASE}/strategy/${encodeURIComponent(selectedBank)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setStrategy(data);
+        setStrategyLoading(false);
+      })
+      .catch(() => {
+        setStrategy({
+          core_issue: "Could not generate strategy.",
+          opportunity: "Please check the backend deployment.",
+          strategic_move: "Try again after confirming the API is online."
+        });
+        setStrategyLoading(false);
+      });
   }
 
   const totalComplaints = benchmark.reduce((sum, bank) => sum + bank.total, 0);
@@ -233,20 +257,28 @@ function App() {
             </div>
 
             <div style={cardStyle}>
-              <h3>Data-Driven Strategic Recommendation</h3>
+              <h3>AI Strategy Recommendation</h3>
               <p style={mutedTextStyle}>
-                Recommendation generated from complaint concentration, product-level pain points, and recurring customer keywords.
+                Generate an executive recommendation using the selected institution's complaint concentration, pain points, and keyword signals.
               </p>
+              <button style={buttonStyle} onClick={generateStrategy} disabled={strategyLoading}>
+                {strategyLoading ? "Generating..." : "Generate AI strategy"}
+              </button>
               <div style={recommendationBoxStyle}>
                 <p style={{ marginTop: 0 }}>
-                  <strong>1. Core issue:</strong> {selectedBank} has a concentration of complaints in <strong>{bankOverview.top_product}</strong>, indicating systemic friction.
+                  <strong>1. Core issue:</strong> {strategy?.core_issue || `${selectedBank} has a concentration of complaints in ${bankOverview.top_product}.`}
                 </p>
                 <p>
-                  <strong>2. Opportunity:</strong> This signals a clear market gap where a fintech could outperform by simplifying flows and reducing customer effort.
+                  <strong>2. Opportunity:</strong> {strategy?.opportunity || "A challenger fintech can compete by simplifying customer flows and reducing customer effort."}
                 </p>
                 <p style={{ marginBottom: 0 }}>
-                  <strong>3. Strategic move:</strong> Build positioning around real customer pain points such as <strong>{keywordSignal || "trust, transparency, support"}</strong>, turning weaknesses into competitive advantage.
+                  <strong>3. Strategic move:</strong> {strategy?.strategic_move || `Build positioning around real customer pain points such as ${keywordSignal || "trust, transparency, support"}.`}
                 </p>
+                {strategy?.source && (
+                  <p style={{ ...mutedTextStyle, marginBottom: 0, marginTop: "14px" }}>
+                    Source: {strategy.source}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -285,5 +317,6 @@ const keywordStyle = { backgroundColor: "#e8eef5", padding: "8px 12px", borderRa
 const barBackgroundStyle = { height: "10px", backgroundColor: "#e5e7eb", borderRadius: "999px", overflow: "hidden" };
 const barFillStyle = { height: "10px", backgroundColor: "#2c3e50", borderRadius: "999px" };
 const recommendationBoxStyle = { marginTop: "18px", padding: "18px", backgroundColor: "#eef4fb", borderLeft: "5px solid #2c3e50", borderRadius: "10px", lineHeight: "1.6" };
+const buttonStyle = { marginTop: "8px", marginBottom: "12px", padding: "12px 18px", backgroundColor: "#2c3e50", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", cursor: "pointer" };
 
 export default App;
