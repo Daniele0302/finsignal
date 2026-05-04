@@ -73,7 +73,8 @@ function App() {
         setStrategy({
           core_issue: "Could not generate strategy.",
           opportunity: "Please check the backend deployment.",
-          strategic_move: "Try again after confirming the API is online."
+          strategic_move: "Try again after confirming the API is online.",
+          source: "frontend_error",
         });
         setStrategyLoading(false);
       });
@@ -276,7 +277,7 @@ function App() {
                 </p>
                 {strategy?.source && (
                   <p style={{ ...mutedTextStyle, marginBottom: 0, marginTop: "14px" }}>
-                    Source: {strategy.source}
+                    Mode: {strategy.source === "ai_ready_data_driven_mode" ? "AI-ready data-driven recommendation" : strategy.source}{strategy.model ? ` · Model: ${strategy.model}` : ""}
                   </p>
                 )}
               </div>
