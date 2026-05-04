@@ -11,7 +11,7 @@ import {
   Cell,
 } from "recharts";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://finsignal.onrender.com";
 const COLORS = ["#2c3e50", "#4f6f8f", "#7f9db9", "#a7c0d8", "#d6e3ef", "#51606e", "#8090a0", "#a8b4c0", "#c5ced8", "#e1e7ee"];
 
 function App() {
