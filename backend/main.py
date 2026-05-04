@@ -80,7 +80,7 @@ def build_fallback_strategy(bank_name: str, bank_df):
         "core_issue": f"{bank_name} shows its strongest complaint concentration in {top_product}.",
         "opportunity": "A challenger fintech can compete by reducing customer effort, simplifying resolution flows, and improving communication clarity.",
         "strategic_move": f"Position around customer pain points such as {keyword_text}, turning incumbent weaknesses into a trust-based acquisition strategy.",
-        "source": "data_driven_fallback"
+        "source": "ai_ready_data_driven_mode"
     }
 
 
@@ -96,17 +96,7 @@ def home():
             "/top-issues/{bank_name}",
             "/wordcloud/{bank_name}",
             "/strategy/{bank_name}",
-            "/debug/openai",
         ],
-    }
-
-
-@app.get("/debug/openai")
-def debug_openai():
-    return {
-        "openai_package_loaded": OpenAI is not None,
-        "openai_api_key_present": bool(os.getenv("OPENAI_API_KEY")),
-        "openai_model": os.getenv("OPENAI_MODEL") or os.getenv("OPENAI_API_MODEL") or "gpt-4o-mini",
     }
 
 
@@ -196,52 +186,5 @@ def get_strategy(bank_name: str):
     if bank_df.empty:
         return {"error": "Bank not found"}
 
-    fallback_strategy = build_fallback_strategy(bank_name, bank_df)
-
-    if OpenAI is None or not os.getenv("OPENAI_API_KEY"):
-        return fallback_strategy
-
-    total = len(bank_df)
-    top_product = bank_df["product"].value_counts().index[0]
-    top_issues = bank_df["product"].value_counts().head(5).to_dict()
-    top_keywords = [word for word, count in extract_keywords(bank_df, limit=12)]
-
-    prompt = f"""
-You are a fintech strategy consultant.
-Use the complaint analytics below to generate a concise executive strategy for a challenger fintech.
-
-Bank analyzed: {bank_name}
-Total complaints analyzed: {total}
-Main complaint area: {top_product}
-Top complaint areas: {top_issues}
-Top recurring keywords: {top_keywords}
-
-Return only valid JSON with exactly these keys:
-core_issue, opportunity, strategic_move.
-Each value must be one concise sentence.
-"""
-
-    try:
-        model_name = os.getenv("OPENAI_MODEL") or os.getenv("OPENAI_API_MODEL") or "gpt-4o-mini"
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        response = client.responses.create(
-            model=model_name,
-            input=prompt,
-        )
-
-        parsed = json.loads(response.output_text)
-        return {
-            "core_issue": parsed.get("core_issue", fallback_strategy["core_issue"]),
-            "opportunity": parsed.get("opportunity", fallback_strategy["opportunity"]),
-            "strategic_move": parsed.get("strategic_move", fallback_strategy["strategic_move"]),
-            "source": "openai_api",
-            "model": model_name,
-        }
-    except Exception as e:
-        return {
-            "core_issue": fallback_strategy["core_issue"],
-            "opportunity": fallback_strategy["opportunity"],
-            "strategic_move": fallback_strategy["strategic_move"],
-            "source": "openai_error_fallback",
-            "error": str(e)[:500],
-        }
+    return build_fallback_strategy(bank_name, bank_df)
+    
